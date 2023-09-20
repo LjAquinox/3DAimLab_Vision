@@ -9,6 +9,7 @@ import os
 import math
 import tempfile
 import h5py
+from RezizeImg import *
 
 def setSeed(seed) :
     tf.keras.backend.clear_session()
@@ -49,7 +50,7 @@ def move_and_click(x,y,nbFound) :
     time.sleep(0.15)
     condition = pyautogui.pixelMatchesColor(960, 540, target_color, tolerance=5)
     if condition == True:
-        pyautogui.screenshot(f'my_screenshot{nbFound}.png', region=(200, 180, 1600, 730))
+        pyautogui.screenshot(f'.\Images\my_screenshot{nbFound}.png', region=(200, 180, 1600, 730))
     time.sleep(0.15)
     click(0, 0, delay=0)
     return condition
@@ -69,9 +70,9 @@ class MyNeuralNetwork:
     def build_model(self):
         # Define and build your neural network architecture here
         model = tf.keras.Sequential([
-            tf.keras.layers.Conv2D(8, (3, 3), activation='relu', input_shape=(730, 1600, 3)),
+            tf.keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(182, 400, 3)),
             tf.keras.layers.MaxPooling2D((2, 2)),
-            tf.keras.layers.Conv2D(8, (3, 3), activation='relu'),
+            tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
             tf.keras.layers.MaxPooling2D((2, 2)),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dense(32, activation='relu'),
@@ -94,9 +95,7 @@ class MyNeuralNetwork:
         self.model.fit(X_train,y_train, epochs=num_epochs, batch_size=batch_size)
 
     def predict(self, screenshot):
-        # Resize the input screenshot to match the model's input shape
-        input_data = np.array(screenshot.resize((1600, 730)))
-        input_data = input_data / 255.0  # Normalize pixel values to [0, 1]
+        input_data = screenshot / 255.0  # Normalize pixel values to [0, 1]
         # Perform prediction
         predictions = self.model.predict(np.expand_dims(input_data, axis=0))
         x, y = predictions[0]
@@ -108,7 +107,7 @@ class MyNeuralNetwork:
 
 def main(MIN_TRAINING_SAMPLES,SAVE_TRAINING_EVERY,AmountOfRnd):
     temps = time.time_ns()
-    nbFound=338
+    nbFound=0
     Value = max(1,int(nbFound / SAVE_TRAINING_EVERY))
     Value2 = max(1,int(nbFound / MIN_TRAINING_SAMPLES))
     TravelDist = (0, 0)
@@ -131,18 +130,23 @@ def main(MIN_TRAINING_SAMPLES,SAVE_TRAINING_EVERY,AmountOfRnd):
             y_train.append(elem)
 
     while True:
-        if time.time_ns() - temps >= 12000000000 :
+        if time.time_ns() - temps >= 15000000000 :
             #print(f"Total travel Distance this round {TravelDist}")
             restart()
             temps=time.time_ns()
             TravelDist = (0, 0)
 
         #print("Taking a screenshot")
-        screenshot = pyautogui.screenshot(region=(200, 180, 1600, 730))
+        while pyautogui.pixelMatchesColor(960, 540, target_color, tolerance=5) == True :
+            #Here to prevent starting on top of a correct position
+            x, y = (random.randint(-50, 50), random.randint(-50, 50))
+            move_relative(x,y)
+
+        screenshot = resize_image(np.array(pyautogui.screenshot(region=(200, 180, 1600, 730))))
         if random.randint(0,100) >= AmountOfRnd :
             x, y = model.predict(screenshot)
         else :
-            x, y = (random.randint(-200,200),random.randint(-100,100))
+            x, y = (random.randint(-150,150),random.randint(-100,100))
         #print("Screenshot taken")
         cond =move_and_click(x, y,nbFound)
         #print(f"Click x:{x} y:{y}")
@@ -150,8 +154,10 @@ def main(MIN_TRAINING_SAMPLES,SAVE_TRAINING_EVERY,AmountOfRnd):
             #X_Train.append(screenshot)
             #y_Train.append([x, y])
             #print(f"screenshot shape before append{np.array(screenshot).shape}")
-            X_train.append(np.array(screenshot))
+            screenshot = process_image(screenshot)
+            X_train.append(screenshot)
             y_train.append([x, y])
+            cv2.imwrite(f".\Images2\my_screenshot{nbFound}.png", cv2.cvtColor(screenshot, cv2.COLOR_RGB2BGR))
             nbFound += 1
             #print(f"X train shape after append{X_train.shape}")
             #print("Found correct color saving it")
@@ -161,9 +167,8 @@ def main(MIN_TRAINING_SAMPLES,SAVE_TRAINING_EVERY,AmountOfRnd):
             #print("Hors zone retour a départ")
             move_relative(-int(TravelDist[0]*1.25),-int(TravelDist[1]*1.25))
             TravelDist = (-int(TravelDist[0]*0.25),-int(TravelDist[1]*0.25))
-        #time.sleep(5)
+            time.sleep(0.05)
         # Save training data periodically
-        #print(len(X_train))
         if len(X_train) >= SAVE_TRAINING_EVERY * Value:
             X_train_arr = np.array(X_train)
             y_train_arr = np.array(y_train)
@@ -185,15 +190,13 @@ def main(MIN_TRAINING_SAMPLES,SAVE_TRAINING_EVERY,AmountOfRnd):
             Value2 = Value2 + 1
             X_train_arr = np.array(X_train)  # Convert to NumPy array
             y_train_arr = np.array(y_train)  # Convert to NumPy array
-            model.train(X_train_arr, y_train_arr,num_epochs=5)
-
-
+            model.train(X_train_arr, y_train_arr,num_epochs=2)
 
 
 if __name__ == "__main__":
     setSeed(36)
-    MIN_TRAINING_SAMPLES = 5000  # Define the minimum training samples needed
-    SAVE_TRAINING_EVERY = 30  # Define how often to save training data
+    MIN_TRAINING_SAMPLES = 1000  # Define the minimum training samples needed
+    SAVE_TRAINING_EVERY = 20  # Define how often to save training data
     AmountOfRnd = 50
     context = Interception()
     #context.set_filter(context.is_keyboard, FilterKeyState.FILTER_KEY_DOWN) #To disable keyboard interaction
