@@ -41,5 +41,8 @@ With only this explore.py version of the code (no AI involved) I managed to rank
 
 The next step is to AI that thing. but I first need to learn more about the YOLO and darknet architecture.
 
-
+PS : my screen is 1920x1080 and I use the valorant setting with 1.8 sensitivity : Aim and 103 FOV
+If this is not your case you need to change the logic of the following functions inside FindBoundingBoxes.py :
+  - PositionOfBox_RelativeToCenter()
+  - mouse_movement_required_xy()
 
