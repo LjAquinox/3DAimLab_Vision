@@ -22,3 +22,24 @@ Pre Post Processing :
 
 Post Post Precessing :
 ![my_screenshot0](https://github.com/LjAquinox/3DAimLab_Vision/assets/125894602/a81150d6-8c58-4575-a590-57760f3fb891)
+
+
+I found a nice way to explore with square bounding box detection thus making saving data with labels way easier.
+
+I first tried my own square Bounding Box detection in a very inefficient way but still interresting (you can find it in FindBoundingBoxesOld.py)
+Then I found this [stackoverflow](https://stackoverflow.com/questions/55169645/square-detection-in-image) with a much better way to do it so I adapted it to my use case and it resulted in FindBoundingBoxes.py.
+
+And now I create a new file explore.py that use these BB (bounding boxes) to find where to click. These BB are the future Labels of the image for training.
+
+They look like this :
+![screenshot_73](https://github.com/LjAquinox/3DAimLab_Vision/assets/125894602/f74772ea-e6cf-4bf6-9452-84d11f59fa30)
+
+And only take about 1ms to process on my computer. 
+With only this explore.py version of the code (no AI involved) I managed to rank 4th.
+
+![image](https://github.com/LjAquinox/3DAimLab_Vision/assets/125894602/56bf35ff-a344-4b3a-9beb-0237890934ae)
+
+The next step is to AI that thing. but I first need to learn more about the YOLO and darknet architecture.
+
+
+
