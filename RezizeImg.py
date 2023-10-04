@@ -8,7 +8,6 @@ def is_in_vicinity(color, target_color=(255, 120, 55), tolerance=30):
     """
     return np.linalg.norm(np.array(color) - np.array(target_color)) < tolerance
 
-
 def resize_image(img, factor=0.25):
     """
     Resize the given image by a factor.
@@ -44,6 +43,7 @@ def process_image(img):
         for x in range(img_rgb.shape[1]):
             if is_in_vicinity(img_rgb[y, x]):
                 mask[y, x] = img_rgb[y, x]
+
 
     # Apply the neighborhood check to refine the mask
     output_img = np.zeros_like(mask)
